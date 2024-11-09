@@ -1,23 +1,23 @@
 <template>
-    <!-- <v-container>
+    <v-container>
             <v-list>
                 <v-list-item v-for="bd in board" :key="bd.id">
                     <v-list-item-title>{{ bd.title }} </v-list-item-title>
                     <v-list-item-subtitle>작성자: {{ bd.author }}</v-list-item-subtitle>
                     <v-list-item-subtitle>조회수: {{ bd.views }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>생성일: {{ bd.date }}</v-list-item-subtitle>
                     <v-list-item-action>
                         <v-btn color="primary" @click="getDetail(bd.id)">더보기</v-btn>
                     </v-list-item-action>
                 </v-list-item>
             </v-list>
         <v-container>
-            <v-btn :disabled="previousPossible" @click="getPrevious"> 
+            <v-btn :disabled="nextPossible" @click="getPrevious"> 
                 +
             </v-btn>
-            <v-btn :disabled="nextPossible" @click="getNext"> -</v-btn>
+            <v-btn :disabled="previousPossible" @click="getNext"> -</v-btn>
             </v-container>
-    </v-container> -->
-    <v-container></v-container>
+    </v-container>
 </template>
 <script>
 import * as boardApi from '@/api/board';
@@ -44,9 +44,8 @@ export default {
             }
         })
         const board = toRef(state, 'board')
-        const previousPossible=computed(()=>state.board.meta.page<=1)
+        const previousPossible=computed(()=>state.meta.page>=1)
         const nextPossible=computed(()=>state.meta.last==true)
-        //const board = toRef(state,'board')
         const get = (author, contents, title, size, page) => {
             boardApi.get(author, contents, title, size, page).then((res) => {
                 console.info(res.data)
@@ -58,7 +57,7 @@ export default {
                         generatedAt: d.generatedAt,
                         views: d.views,
                         thumbup: d.thumbup,
-                        date: getDate(d.createdAt)})
+                        date: getDate(d.generatedAt)})
                 })
                 state.meta = res.data.meta
             })
