@@ -1,14 +1,14 @@
 <template>
-  <BoardVue/>
+  <router-view/>
 </template>
 
 <script>
-import BoardVue from './views/BoardView.vue'
+//import BoardVue from './views/BoardView.vue'
 
 export default {
   name: 'App',
   components: {
-    BoardVue
+    //BoardVue
   }
 }
 </script>

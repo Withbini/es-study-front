@@ -1,65 +1,89 @@
 <template>
     <v-container>
-            <v-list>
-                <v-list-item v-for="bd in board" :key="bd.id">
-                    <v-list-item-title>{{ bd.title }} </v-list-item-title>
-                    <v-list-item-subtitle>작성자: {{ bd.author }}</v-list-item-subtitle>
-                    <v-list-item-subtitle>조회수: {{ bd.views }}</v-list-item-subtitle>
-                    <v-list-item-subtitle>생성일: {{ bd.date }}</v-list-item-subtitle>
-                    <v-list-item-action>
-                        <v-btn color="primary" @click="getDetail(bd.id)">더보기</v-btn>
-                    </v-list-item-action>
-                </v-list-item>
-            </v-list>
+
+        <select v-model="searchOption" name="searchOption">
+            <option value="all" selected>전체 검색</option>
+            <option value="title">제목 검색</option>
+            <option value="author">작성자 검색</option>
+            <option value="content">내용 검색</option>
+        </select>
+        <form @submit.prevent="search">
+            <input class="search-txt" type="text" name="" v-model="searchData" placeholder="검색어를 입력하세요">
+            <button class="search-btn" type="submit" name="">
+
+            </button>
+        </form>
+            <v-data-table
+                :items="board"
+                item-key="id"
+                class="elevation-1"
+                
+                hide-default-footer
+                >
+                <!-- @click:row="(bd) => getDetail(bd.id)" -->
+                <template #header>
+                    <tr>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>생성일</th>
+                    <th>조회수</th>
+                    <th>좋아요</th>
+                    </tr>
+                </template>
+                <template #item="{ item }">
+                        <tr>
+                    <td>{{ item.id }}</td>
+                    <td>
+                        <v-btn text @click.stop="getDetail(item.id)">
+                        {{ item.title }}
+                        </v-btn>
+                    </td>
+                    <td>{{ item.author }}</td>
+                    <td>{{ item.views }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.thumpsUp }}</td>
+                    </tr>
+                </template>
+            </v-data-table>
         <v-container>
-            <v-btn :disabled="nextPossible" @click="getPrevious"> 
+            <v-btn :disabled="nextDisabled" @click="getNext"> 
                 +
             </v-btn>
-            <v-btn :disabled="previousPossible" @click="getNext"> -</v-btn>
+            <v-btn :disabled="previousDisabled" @click="getPrevious"> -</v-btn>
             </v-container>
     </v-container>
 </template>
 <script>
 import * as boardApi from '@/api/board';
 import { useRouter } from 'vue-router';
-import { onMounted, reactive, computed, toRef} from 'vue';
+import { useStore } from 'vuex';
+import { onMounted, computed, ref} from 'vue';
 
-function getDate(str) {
-    let date = new Date(str)
-    let strr = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}:${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-    return strr
-}
+
 export default {
     setup(){
         onMounted(()=>{
+            //store.commit('clear')
             get("","","",10,1)
         })
+        const store = useStore();
         const router = useRouter()
-        const state = reactive({
-            board: [],
-            meta:{
-                count:10,
-                last:false,
-                page:1,
-            }
-        })
-        const board = toRef(state, 'board')
-        const previousPossible=computed(()=>state.meta.page>=1)
-        const nextPossible=computed(()=>state.meta.last==true)
+        const searchOption = ref('all');
+        const searchData=ref('');
+        //const board = toRef(state, 'board')
+        const board = computed(()=>store.getters.board)
+        const previousDisabled=computed(()=>meta.value.page<=1)
+        const nextDisabled=computed(()=>meta.value.last==true)
+        const meta = computed(()=>store.getters.meta)
         const get = (author, contents, title, size, page) => {
             boardApi.get(author, contents, title, size, page).then((res) => {
                 console.info(res.data)
                 let boards = res.data.boards
                 boards.forEach((d) => {
-                    state.board.push({ id: d.id, 
-                        title: d.title, 
-                        author: d.author,
-                        generatedAt: d.generatedAt,
-                        views: d.views,
-                        thumbup: d.thumbup,
-                        date: getDate(d.generatedAt)})
+                    store.commit('push', d)
                 })
-                state.meta = res.data.meta
+
+                store.commit('updateMeta',res.data.meta)
             })
         }
         const update = (id) => {
@@ -70,11 +94,12 @@ export default {
                 }
             })
         }
-        const getDetail = (id) => {
+        const getDetail = (boardId) => {
+            console.info(`BJB getdetail id:${boardId}`)
             router.push({
-                path: "/board/detail",
-                state: {
-                    data: id
+                name: "BoardDetail",
+                params: {
+                     id:boardId
                 }
             })
         }
@@ -84,14 +109,75 @@ export default {
             })
         }
         const getNext=()=>{
-            get(state.meta.page + 1)
+            store.commit('clear')
+            get({page:meta.value.page + 1})
         }
         const getPrevious=()=>{
-            get(state.meta.page - 1)
+            store.commit('clear')
+            get({page:meta.value.page - 1})
+        }
+        const search = ()=>{
+            console.info(`JBJB ${searchOption.value}`);
+            if(searchOption.value == "content") {
+                boardApi.get({"contents":searchData.value}).then((res) => {
+                    console.info(res.data.boards)
+                    let boards = res.data.boards
+                    store.commit('clear')
+                    boards.forEach((d) => {
+                        
+                        store.commit('push', d)
+                    })
+                    store.commit('updateMeta',res.data.meta)
+                })
+            }
+            else if(searchOption.value == "author") {
+                boardApi.get({"author":searchData.value}).then((res) => {
+                    console.info(res.data.boards)
+                    let boards = res.data.boards
+                    store.commit('clear')
+                    boards.forEach((d) => {
+                        store.commit('push', d)
+                    })
+                    store.commit('updateMeta',res.data.meta)
+                })
+            }
+            else if(searchOption.value == "content-and-title"){
+                boardApi.get(null,searchData.value,searchData.value).then((res) => {
+                    console.info(res.data.boards)
+                    let boards = res.data.boards
+                    store.commit('clear')
+                    boards.forEach((d) => {
+                        store.commit('push', d)
+                    })
+                    store.commit('updateMeta',res.data.meta)
+                })
+            }
+            else if(searchOption.value == "title"){
+                boardApi.get({"title":searchData.value}).then((res) => {
+                    console.info(`data : ${JSON.stringify(res.data.boards)}`)
+                    let boards = res.data.boards
+                    store.commit('clear')
+                    boards.forEach((d) => {
+                        store.commit('push', d)
+                    })
+                    store.commit('updateMeta',res.data.meta)
+                })
+            }else{
+                get("","","",10,1)
+            }
         }
         return{
-            state,get,update,getDetail,deleteBoard,previousPossible,nextPossible,getNext,getPrevious,board
+            get,update,getDetail,deleteBoard,previousDisabled,nextDisabled,getNext,getPrevious,board,search,searchData,searchOption
         }
     }
 }
 </script>
+
+<style lang="css" scoped>
+.search-btn{
+    color:#ffdeec;
+    width:20px;
+    height:20px;
+    background-color: #ffdeec;
+}
+</style>

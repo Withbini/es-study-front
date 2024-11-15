@@ -1,7 +1,8 @@
 import http from './http'
 
-export async function get(author, contents, title, size, page) {
-    return await http.get("/board/search", { "id": author, "contents": contents, "title": title, "size": size, "page": page }).then(response => {
+export async function get({author, contents, title, size, page}) {
+    return await http.get("/board/search", {"params":{ "author": author, "contents": contents, "title": title, "size": size, "page": page} })
+    .then(response => {
         if (response.status === 200) {
             return response
         }
@@ -9,7 +10,7 @@ export async function get(author, contents, title, size, page) {
 }
 
 export async function getDetail(id) {
-    return await http.get("/board", { "id": id }).then(response => {
+    return await http.get("/board", { "params":{ "id": id }}).then(response => {
         if (response.status === 200) {
             return response
         }
