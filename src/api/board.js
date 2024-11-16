@@ -37,7 +37,7 @@ export async function update(request) {
 }
 
 export async function deleteBoard(id) {
-    return await http.get("/board", { "id": id }).then(response => {
+    return await http.delete("/board", {"params":{"id": id} }).then(response => {
         if (response.status === 201) {
             return response
         }

@@ -17,22 +17,14 @@
                 :items="board"
                 item-key="id"
                 class="elevation-1"
+                :headers="header"
                 
                 hide-default-footer
                 >
                 <!-- @click:row="(bd) => getDetail(bd.id)" -->
-                <template #header>
-                    <tr>
-                    <th>제목</th>
-                    <th>작성자</th>
-                    <th>생성일</th>
-                    <th>조회수</th>
-                    <th>좋아요</th>
-                    </tr>
-                </template>
                 <template #item="{ item }">
                         <tr>
-                    <td>{{ item.id }}</td>
+                    <!-- <td>{{ item.id }}</td> -->
                     <td>
                         <v-btn text @click.stop="getDetail(item.id)">
                         {{ item.title }}
@@ -63,9 +55,24 @@ import { onMounted, computed, ref} from 'vue';
 export default {
     setup(){
         onMounted(()=>{
-            //store.commit('clear')
+            console.info("JBJB mount clear 전")
+            store.commit('clear')
             get("","","",10,1)
+            console.info("JBJB mount clear 후")
         })
+    //     onActivated(() => {
+    //         console.info('컴포넌트가 활성화되었습니다.');
+    //         store.commit('clear')
+    //         get("","","",10,1)
+    //    });
+    const header = ref([
+        {text:'제목',value:'title'},
+        {text:'작성자',value:'author'},
+        {text:'생성일',value:'date'},
+        {text:'조회수',value:'views'},
+        {text:'좋아요',value:'thumbsUp'}
+    ])
+
         const store = useStore();
         const router = useRouter()
         const searchOption = ref('all');
@@ -116,58 +123,38 @@ export default {
             store.commit('clear')
             get({page:meta.value.page - 1})
         }
+        const callbackAfterGetApi=(data)=>{
+            console.info(data)
+            let boards = data.boards
+            store.commit('clear')
+            boards.forEach((d) => {
+                store.commit('push', d)
+            })
+            store.commit('updateMeta',data.meta)
+        }
         const search = ()=>{
             console.info(`JBJB ${searchOption.value}`);
             if(searchOption.value == "content") {
                 boardApi.get({"contents":searchData.value}).then((res) => {
-                    console.info(res.data.boards)
-                    let boards = res.data.boards
-                    store.commit('clear')
-                    boards.forEach((d) => {
-                        
-                        store.commit('push', d)
-                    })
-                    store.commit('updateMeta',res.data.meta)
+                    callbackAfterGetApi(res.data)
                 })
             }
             else if(searchOption.value == "author") {
                 boardApi.get({"author":searchData.value}).then((res) => {
-                    console.info(res.data.boards)
-                    let boards = res.data.boards
-                    store.commit('clear')
-                    boards.forEach((d) => {
-                        store.commit('push', d)
-                    })
-                    store.commit('updateMeta',res.data.meta)
-                })
-            }
-            else if(searchOption.value == "content-and-title"){
-                boardApi.get(null,searchData.value,searchData.value).then((res) => {
-                    console.info(res.data.boards)
-                    let boards = res.data.boards
-                    store.commit('clear')
-                    boards.forEach((d) => {
-                        store.commit('push', d)
-                    })
-                    store.commit('updateMeta',res.data.meta)
+                    callbackAfterGetApi(res.data)
                 })
             }
             else if(searchOption.value == "title"){
                 boardApi.get({"title":searchData.value}).then((res) => {
-                    console.info(`data : ${JSON.stringify(res.data.boards)}`)
-                    let boards = res.data.boards
-                    store.commit('clear')
-                    boards.forEach((d) => {
-                        store.commit('push', d)
-                    })
-                    store.commit('updateMeta',res.data.meta)
+                    callbackAfterGetApi(res.data)
                 })
             }else{
                 get("","","",10,1)
             }
         }
         return{
-            get,update,getDetail,deleteBoard,previousDisabled,nextDisabled,getNext,getPrevious,board,search,searchData,searchOption
+            get,update,getDetail,deleteBoard,previousDisabled,nextDisabled,getNext,getPrevious,board,search,searchData,searchOption,
+            header
         }
     }
 }
