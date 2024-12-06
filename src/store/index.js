@@ -1,51 +1,78 @@
 import { createStore } from 'vuex';
-function getDate(str) {
-    let date = new Date(str)
-    let strr = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}:${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-    return strr
-}
+import * as boardApi from '@/api/board';
+
 const store = createStore({
   state: {
-    board: [],
-    meta:{
-        total:10,
-        isLast:false,
-        page:1,
-    }
+    totalViews: 0,
+    totalLikes: 0,
+    boards: [],
   },
   mutations: {
-    clear(state) {
-      state.board = [];
+    setBoards(state, boards) {
+      state.boards = boards;
     },
-    push(state, d) {
-        state.board.push({ id: d.id, 
-            title: d.title, 
-            author: d.author,
-            generatedAt: d.generatedAt,
-            views: d.views,
-            thumbup: d.thumbup,
-            date: getDate(d.generatedAt)})
+    // 총 조회수와 좋아요 수를 초기화
+    setSummary(state, { totalViews, totalLikes }) {
+      state.totalViews = totalViews;
+      state.totalLikes = totalLikes;
     },
-    updateMeta(state ,m){
-        state.meta.total = m.total
-        state.meta.isLast = m.isLast
-        state.meta.page=m.page
-    }
+    setSummaryViews(state, { totalViews }) {
+      state.totalViews = totalViews;
+    },
+    setSummaryLikes(state, { totalLikes }) {
+      state.totalLikes = totalLikes;
+    },
+    incrementLikes(state, boardId) {
+      const board = state.boards.find((b) => b.id === boardId);
+      if (board) {
+        board.thumbsUp += 1;
+        state.totalLikes += 1;
+      }
+    },
+    decrementLikes(state, boardId) {
+      const board = state.boards.find((b) => b.id === boardId);
+      if (board) {
+        board.thumbsUp -= 1;
+        state.totalLikes -= 1;
+      }
+    },
+
   },
   actions: {
-    push({ commit }, data) {
-      commit('push', data);
+    updateBoard({ commit }, boards) {
+      commit("setBoards", boards)
     },
-    clear({commit}){
-        commit('clear');
+    // Summary를 설정하는 액션
+    setSummary({ commit }, summaryData) {
+      commit("setSummary", summaryData);
     },
-    updateMeta({commit},m){
-        commit('updateMeta',m);
-    }
+    // Summary를 업데이트하는 액션
+    updateSummary({ commit }, updateData) {
+      commit("updateSummary", updateData);
+    },
+    async fetchTotalViews({ commit }) {
+      boardApi.getSummary("views").then((res) => {
+        console.info(`JBJB fetchTotalViews :${JSON.stringify(res.data)}`)
+        commit("setSummaryViews", {
+          totalViews: res.data,
+        });
+      })
+    },
+    async fetchTotalLikes({ commit }) {
+      boardApi.getSummary("thumbsUp").then((res) => {
+        console.info(`JBJB fetchTotalLikes :${JSON.stringify(res.data)}`)
+        commit("setSummaryLikes", {
+          totalLikes: res.data,
+        });
+      })
+    },
+
   },
   getters: {
-    board:(state)=>state.board,
-    meta:(state)=>state.meta,
+    // 총 조회수 가져오기
+    getTotalViews: (state) => state.totalViews,
+    // 총 좋아요 수 가져오기
+    getTotalLikes: (state) => state.totalLikes,
   },
 });
 

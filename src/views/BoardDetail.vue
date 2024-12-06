@@ -76,7 +76,6 @@ export default {
     onMounted(() => {
       boardApi.getDetail(id.value).then((res) => {
         var response = res.data;
-        console.info(`JBJB response getDe:${JSON.stringify(response)}`)
 
         title.value = response.title;
         author.value = response.author;
@@ -92,22 +91,18 @@ export default {
         "id": id.value,
         "action": "INCREASE",
         "target": "thumbsUp"
-      }).then((res) => {
+      }).then(() => {
         like.value = like.value + 1;
-        console.info(`JBJB increase result ${JSON.stringify(res.data)}`)
       })
-      window.location.reload(); // 페이지 새로고침
     }
     const decreaseLike = () => {
       boardApi.updateData({
         "id": id.value,
         "action": "DECREASE",
         "target": "thumbsUp"
-      }).then((res) => {
+      }).then(() => {
         like.value = like.value - 1;
-        console.info(`JBJB DECREASE result ${JSON.stringify(res.data)}`)
       })
-      window.location.reload(); // 페이지 새로고침
     }
 
 

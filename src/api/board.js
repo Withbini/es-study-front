@@ -76,3 +76,11 @@ export async function deleteBoard(id) {
         }
     }).catch(() => console.error("게시글 삭제에 실패했습니다."))
 }
+
+export async function getSummary(target) {
+    return await http.get("/board/aggregate", { "params": { "param": target } }).then(response => {
+        if (response.status === 200) {
+            return response
+        }
+    }).catch(() => console.error("집계 조회에 실패했습니다."))
+}

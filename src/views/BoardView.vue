@@ -1,35 +1,35 @@
 <template>
-  <div>
-    <!-- 게시판 테이블 -->
-    <table>
-      <thead>
-        <tr>
-          <th class="non-sortable">제목</th>
-          <!-- <th @click="sortBy('author')">작성자</th> -->
-          <th class="non-sortable">작성자</th>
-          <th @click="sortBy('generatedAt')">작성일</th>
-          <th @click="sortBy('views')">조회수</th>
-          <th @click="sortBy('thumbsUp')">좋아요</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(board, index) in boards" :key="index" @click="navigateToDetail(board.id)" class="clickable-row">
-          <!-- <td>
+  <div class="board-layout">
+    <div class="board-content">
+      <!-- 게시판 테이블 -->
+      <table>
+        <thead>
+          <tr>
+            <th class="non-sortable">제목</th>
+            <!-- <th @click="sortBy('author')">작성자</th> -->
+            <th class="non-sortable">작성자</th>
+            <th @click="sortBy('generatedAt')">작성일</th>
+            <th @click="sortBy('views')">조회수</th>
+            <th @click="sortBy('thumbsUp')">좋아요</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(board, index) in boards" :key="index" @click="navigateToDetail(board.id)" class="clickable-row">
+            <!-- <td>
             <router-link :to="{ name: 'BoardDetail', params: { id: board.id } }" class="router-link">
               {{ board.title }}
             </router-link>
           </td> -->
-          <td>{{ board.title }}</td>
-          <td>{{ board.author }}</td>
-          <td>{{ getDate(board.generatedAt) }}</td>
-          <td>{{ board.views }}</td>
-          <td>{{ board.thumbsUp }}</td>
-        </tr>
-      </tbody>
-    </table>
+            <td>{{ board.title }}</td>
+            <td>{{ board.author }}</td>
+            <td>{{ getDate(board.generatedAt) }}</td>
+            <td>{{ board.views }}</td>
+            <td>{{ board.thumbsUp }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <!-- 페이지네이션 -->
-    <footer>
+      <!-- 페이지네이션 -->
       <nav class="pagination">
         <button @click="goToPage(1)" :disabled="currentPage === 0">처음</button>
         <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 0">이전</button>
@@ -42,62 +42,72 @@
         <button @click="goToPage(currentPage + 1)" :disabled="currentPage + 1 === totalPages">다음</button>
         <button @click="goToPage(totalPages)" :disabled="currentPage + 1 === totalPages">마지막</button>
       </nav>
-    </footer>
-    <div class="search-bar">
-      <select v-model="searchType">
-        <option value="TITLE">제목</option>
-        <option value="TITLE_AND_CONTENT">제목 또는 내용</option>
-        <option value="AUTHOR">작성자</option>
-        <option value="CONTENT">내용</option>
-      </select>
-      <input v-model="keyword" type="text" placeholder="검색어를 입력하세요" />
-      <button @click="search">검색</button>
+
+      <div class="search-bar">
+        <select v-model="searchType">
+          <option value="TITLE">제목</option>
+          <option value="TITLE_AND_CONTENT">제목 또는 내용</option>
+          <option value="AUTHOR">작성자</option>
+          <option value="CONTENT">내용</option>
+        </select>
+        <input v-model="keyword" type="text" placeholder="검색어를 입력하세요" />
+        <button @click="search">검색</button>
+      </div>
+      <div>
+        <router-link to="/create-board" class="create-button">
+          생성
+        </router-link>
+      </div>
     </div>
-    <div>
-      <router-link to="/create-board" class="create-button">
-        생성
-      </router-link>
+    <div class="board-summary">
+      <!-- Summary Sidebar -->
+      <SummaryView />
     </div>
   </div>
 </template>
 
 <script>
-import * as boardApi from '@/api/board';
-import { onMounted, computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import * as boardApi from '@/api/board'
+import { onMounted, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import SummaryView from "@/views/SummaryView.vue"
 
 export default {
+  components: {
+    SummaryView
+  },
   setup() {
-    const route = useRouter();
+    const route = useRouter()
+    //const boards = computed(() => store.getters.boards)
     const boards = ref([]);
 
-    const totalPages = ref(1);
-    const currentPage = ref(0);
-    const size = ref(20);
-    const searchType = ref('TITLE');
-    const isLast = ref(false);
-    const sortField = ref("generatedAt");
-    const sortOrder = ref("desc");
-    const keyword = ref("");
+    const totalPages = ref(1)
+    const currentPage = ref(0)
+    const size = ref(20)
+    const searchType = ref('TITLE')
+    const isLast = ref(false)
+    const sortField = ref("generatedAt")
+    const sortOrder = ref("desc")
+    const keyword = ref("")
 
     const print = () => {
       console.info("JBJB:", keyword.value, searchType.value, sortField.value, sortOrder.value, size.value, currentPage.value)
     }
 
     const getDate = (str) => {
-      const date = new Date(str);
+      const date = new Date(str)
 
-      const formatTwoDigits = (num) => String(num).padStart(2, "0");
+      const formatTwoDigits = (num) => String(num).padStart(2, "0")
 
-      const year = date.getFullYear();
-      const month = formatTwoDigits(date.getMonth() + 1);
-      const day = formatTwoDigits(date.getDate());
-      const hours = formatTwoDigits(date.getHours());
-      const minutes = formatTwoDigits(date.getMinutes());
-      const seconds = formatTwoDigits(date.getSeconds());
+      const year = date.getFullYear()
+      const month = formatTwoDigits(date.getMonth() + 1)
+      const day = formatTwoDigits(date.getDate())
+      const hours = formatTwoDigits(date.getHours())
+      const minutes = formatTwoDigits(date.getMinutes())
+      const seconds = formatTwoDigits(date.getSeconds())
 
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    };
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    }
 
     const navigateToDetail = (id) => {
       console.info(`router :${id}`)
@@ -120,47 +130,47 @@ export default {
           alert("데이터가 존재하지 않습니다.")
           return
         }
-        boards.value = response.data.data;
-        totalPages.value = response.data.meta.total;
-        size.value = response.data.meta.size;
-        isLast.value = response.data.meta.isLast;
-        currentPage.value = response.data.meta.page;
+        boards.value = response.data.data
+        totalPages.value = response.data.meta.total
+        size.value = response.data.meta.size
+        isLast.value = response.data.meta.isLast
+        currentPage.value = response.data.meta.page
       })
     }
 
     const search = () => {
-      currentPage.value = 0; // 검색 시 첫 페이지로 초기화
-      get();
-    };
+      currentPage.value = 0 // 검색 시 첫 페이지로 초기화
+      get()
+    }
 
     // 페이지네이션 계산
     const pagesToShow = computed(() => {
-      const start = Math.max(currentPage.value + 1 - 5, 1);
-      const end = Math.min(currentPage.value + 1 + 5, totalPages.value);
-      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    });
+      const start = Math.max(currentPage.value + 1 - 5, 1)
+      const end = Math.min(currentPage.value + 1 + 5, totalPages.value)
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+    })
 
     // 페이지 변경
     const goToPage = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages.value) {
-        currentPage.value = newPage - 1;
-        get();
+        currentPage.value = newPage - 1
+        get()
       }
-    };
+    }
 
     //정렬 변경
     const sortBy = (field) => {
       if (sortField.value === field) {
-        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
       } else {
-        sortField.value = field;
-        sortOrder.value = "desc"; // 기본 내림
+        sortField.value = field
+        sortOrder.value = "desc" // 기본 내림
       }
-      get();
-    };
+      get()
+    }
 
     onMounted(() => {
-      get();
+      get()
     })
 
     return {
@@ -176,12 +186,25 @@ export default {
       keyword,
       searchType,
       navigateToDetail
-    };
+    }
   },
-};
+}
 </script>
 
 <style>
+.board-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.board-content {
+  flex: 3;
+}
+
+.board-summary {
+  flex: 1;
+}
+
 /* 테이블 스타일 */
 table {
   width: 100%;
