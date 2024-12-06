@@ -9,6 +9,29 @@ export async function get({author, contents, title, size, page}) {
     }).catch(() => console.error("게시판 정보를 얻는데 실패했습니다."))
 }
 
+const SearchType ={
+    AUTHOR:"AUTHOR",
+    TITLE:"TITLE",
+    TITLE_AND_CONTENT:"TITLE_AND_CONTENT",
+    CONTENT:"CONTENT",
+};
+export async function get2({keyword, searchType=SearchType.TITLE_AND_CONTENT, sortField="generatedAt", sortOrder="desc", size, page}) {
+    return await http.get("/board/search2", {
+        "params":{ 
+            "keyword": keyword, 
+            "searchType": searchType, 
+            "sortField": sortField, 
+            "sortOrder":sortOrder,
+            "size": size, 
+            "page": page}
+        })
+    .then(response => {
+        if (response.status === 200) {
+            return response
+        }
+    }).catch(() => console.error("게시판 정보를 얻는데 실패했습니다."))
+}
+
 export async function getDetail(id) {
     return await http.get("/board", { "params":{ "id": id }}).then(response => {
         if (response.status === 200) {

@@ -8,8 +8,8 @@ const store = createStore({
   state: {
     board: [],
     meta:{
-        count:10,
-        last:false,
+        total:10,
+        isLast:false,
         page:1,
     }
   },
@@ -27,8 +27,8 @@ const store = createStore({
             date: getDate(d.generatedAt)})
     },
     updateMeta(state ,m){
-        state.meta.count = m.count
-        state.meta.last = m.last
+        state.meta.total = m.total
+        state.meta.isLast = m.isLast
         state.meta.page=m.page
     }
   },
